@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: emails-analyzer
+spec:
+  rules:
+  - host: emails-analyzer.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/api/v1/emails"
+        backend:
+          service:
+            name: emails-analyzer
+            port:
+              number: 8080
+

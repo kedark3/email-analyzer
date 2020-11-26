@@ -1,0 +1,22 @@
+# Deployment object for k8s/openshift deployments
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: emails-analyzer
+  name: emails-analyzer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emails-analyzer
+  template:
+    metadata:
+      labels:
+        app: emails-analyzer
+    spec:
+      containers:
+      - image: quay.io/kkulkarn/email-analyzer
+        name: emails-analyzer
+        ports:
+          - containerPort: 8080
