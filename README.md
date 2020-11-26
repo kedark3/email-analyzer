@@ -147,6 +147,8 @@ go get github.com/kedark3/email-analyzer
 ```sh
 kubectl create -f k8s-configs/
 ```
+These configs use the image from Quay.io, which is present at: https://quay.io/repository/kkulkarn/email-analyzer and its auto-build configured, to build on changes to the GitHub repo.
+
 4. Find the ingress resource created in your namespace:
 ```sh
 kubectl get ingress
