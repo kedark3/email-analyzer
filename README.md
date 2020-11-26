@@ -154,6 +154,33 @@ kubectl get ingress
 5. Once Ingress resource gets an address and ready for use, head over to `http://emails-analyzer.com/api/v1/emails` and start using the api.
 
 
+If you have ArgoCD, you can use a file similar to this to deploy application on your cluster:
+
+```yaml
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: email-analyzer
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/kedark3/email-analyzer.git'
+    path: k8s-configs
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: email-analyzer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Prune=true
+
+```
+
 ## How do I POST to API?
 
 
