@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"      // to log erros
 	"net/http" // provides necessary functionality for rest api
-	"regexp"
 	"strings"
 )
 
@@ -19,18 +18,6 @@ type FormattedEmail struct {
 	MessageID string `json:"Message-ID"`
 }
 
-// This function will take the fieldName and extract it from the Email
-func extractFieldFromEmail(fieldName, emailText string) string {
-	// regex is compiled of the form "\nTo:.*"
-	re := regexp.MustCompile("\n" + fieldName + ".*")
-	// if we matched 1 field, then process it
-	if matched := re.FindAllString(emailText, 1); len(matched) == 1 {
-		// Split on the field name and then choose 1st element from split and trim surrounding spaces
-		return strings.TrimSpace(strings.Split(string(matched[0]), fieldName)[1])
-	}
-	return ""
-}
-
 // This function takes the emailText and returns struct of FormattedEmail type by parsing
 // email contents and error object
 func parseEmails(emailText string) (FormattedEmail, error) {
@@ -40,12 +27,28 @@ func parseEmails(emailText string) (FormattedEmail, error) {
 		return FormattedEmail{}, err
 	}
 
+	var to, from, date, subject, messageID string
+	for _, line := range strings.Split(emailText, "\n") {
+		switch {
+		case strings.HasPrefix(line, "To:") && to == "":
+			to = strings.TrimSpace(strings.Split(line, "To:")[1])
+		case strings.HasPrefix(line, "From:") && from == "":
+			from = strings.TrimSpace(strings.Split(line, "From:")[1])
+		case strings.HasPrefix(line, "Message-ID:") && messageID == "":
+			messageID = strings.TrimSpace(strings.Split(line, "Message-ID:")[1])
+		case strings.HasPrefix(line, "Subject:") && subject == "":
+			subject = strings.TrimSpace(strings.Split(line, "Subject:")[1])
+		case strings.HasPrefix(line, "Date:") && date == "":
+			date = strings.TrimSpace(strings.Split(line, "Date:")[1])
+		}
+	}
+
 	fmtEmail := FormattedEmail{
-		To:        extractFieldFromEmail("To:", emailText),
-		From:      extractFieldFromEmail("From:", emailText),
-		Date:      extractFieldFromEmail("Date:", emailText),
-		Subject:   extractFieldFromEmail("Subject:", emailText),
-		MessageID: extractFieldFromEmail("Message-ID:", emailText),
+		To:        to,
+		From:      from,
+		Date:      date,
+		Subject:   subject,
+		MessageID: messageID,
 	}
 	return fmtEmail, nil
 }
