@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"      // to log erros
 	"net/http" // provides necessary functionality for rest api
+	"regexp"
 	"strings"
 )
 
@@ -28,7 +29,8 @@ func parseEmails(emailText string) (FormattedEmail, error) {
 	}
 
 	var to, from, date, subject, messageID string
-	for _, line := range strings.Split(emailText, "\n") {
+	emailTextSliced := strings.Split(emailText, "\n")
+	for index, line := range emailTextSliced {
 		switch {
 		case strings.HasPrefix(line, "To:") && to == "":
 			to = strings.TrimSpace(strings.Split(line, "To:")[1])
@@ -38,6 +40,17 @@ func parseEmails(emailText string) (FormattedEmail, error) {
 			messageID = strings.TrimSpace(strings.Split(line, "Message-ID:")[1])
 		case strings.HasPrefix(line, "Subject:") && subject == "":
 			subject = strings.TrimSpace(strings.Split(line, "Subject:")[1])
+			// Subject could be multiple lines, hence make sure to iterate through next
+			// couple of indices to check if we need to add those to `subject`
+			// when we find a line beginning with `(?m)^[A-Za-z-]*:` we know we are on the next
+			// field in the email header and hence our loop ends there.
+			// TODO: this has a slight risk if subject is the last line in the header before body begins
+			re2 := regexp.MustCompile(`(?m)^[A-Za-z-]*:`)
+			for !re2.MatchString(emailTextSliced[index+1]) {
+				subject += emailTextSliced[index+1]
+				index++
+			}
+
 		case strings.HasPrefix(line, "Date:") && date == "":
 			date = strings.TrimSpace(strings.Split(line, "Date:")[1])
 		}
